@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Pesanan Berhasil — Aqel Premium Vape{% endblock %}
+{% block content %}
+<div class="wrapper" style="max-width:600px;text-align:center;padding-top:60px;">
+  <div style="font-size:72px;margin-bottom:20px;" class="fade-up">✅</div>
+  <h1 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin-bottom:10px;" class="fade-up d1">Pesanan Diterima!</h1>
+  <p style="color:var(--muted);margin-bottom:24px;line-height:1.7;" class="fade-up d1">
+    Terima kasih, <strong style="color:var(--text)">{{ nama }}</strong>!<br>
+    Akan dikirim ke: <span style="color:var(--accent)">{{ alamat }}</span>
+  </p>
+
+  <!-- Kode Pesanan -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;" class="fade-up d1">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.4px;">KODE PESANAN — simpan untuk cek invoice</div>
+    <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:10px;">{{ order_code }}</div>
+    <button onclick="navigator.clipboard.writeText('{{ order_code }}').then(()=>{this.textContent='✅ Tersalin!';setTimeout(()=>this.textContent='📋 Salin Kode',2000)})"
+      style="background:rgba(232,168,87,.12);border:1px solid rgba(232,168,87,.3);color:var(--accent);padding:6px 18px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;">
+      📋 Salin Kode
+    </button>
+  </div>
+
+  <div style="background:rgba(232,168,87,.07);border:1px solid rgba(232,168,87,.25);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;text-align:left;font-size:13px;" class="fade-up d1">
+    <strong>💳 {{ order.metode_bayar }}</strong> — status: {{ order.status_bayar }}<br>
+    <span style="color:var(--muted)">{{ store.info_bayar }}</span>
+    {% if email_sent %}<br><span style="color:var(--teal)">✉️ Konfirmasi dikirim ke {{ email }}</span>{% endif %}
+  </div>
+  <!-- Items -->
+  {% if items %}
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;text-align:left;" class="fade-up d2">
+    {% for item in items %}
+    <div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:14px;font-weight:500;">{{ item.nama }}</div>
+        {% if item.type == 'device' %}
+        <div style="font-size:12px;color:var(--muted)">🎨 {{ item.warna }} · {{ item.tipe }}{% if item.qty > 1 %} × {{ item.qty }}{% endif %}</div>
+        {% else %}
+        <div style="font-size:12px;color:var(--muted)">{{ item.rasa }} · {{ item.nikotin }}mg{% if item.qty > 1 %} × {{ item.qty }}{% endif %}</div>
+        {% endif %}
+      </div>
+      <div style="color:var(--accent);font-weight:700;font-size:14px;">{{ item.subtotal_fmt }}</div>
+    </div>
+    {% endfor %}
+    <div style="padding:10px 18px 0;display:flex;justify-content:space-between;font-size:13px;color:var(--muted);"><span>Subtotal</span><span>{{ order.subtotal_fmt }}</span></div>
+    {% if order.diskon %}<div style="padding:4px 18px 0;display:flex;justify-content:space-between;font-size:13px;color:var(--teal);"><span>Diskon {{ order.voucher_kode or '' }}</span><span>− {{ order.diskon_fmt }}</span></div>{% endif %}
+    <div style="padding:4px 18px 0;display:flex;justify-content:space-between;font-size:13px;color:var(--muted);"><span>Ongkir</span><span>{{ order.ongkir_fmt if order.ongkir else 'Gratis' }}</span></div>
+    <div style="padding:14px 18px;display:flex;justify-content:space-between;font-family:'Playfair Display',serif;font-weight:700;font-size:16px;">
+      <span>Total</span><span style="color:var(--accent)">{{ total_fmt }}</span>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Invoice Options -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;text-align:left;" class="fade-up d2">
+    <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text);">📄 Dapatkan Invoice Kamu</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+
+      <!-- View invoice -->
+      <a href="/invoice/{{ order_code }}" target="_blank"
+         style="display:flex;align-items:center;gap:12px;background:rgba(232,168,87,.08);border:1px solid rgba(232,168,87,.2);border-radius:10px;padding:12px 16px;text-decoration:none;color:var(--text);transition:all .2s;"
+         onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(232,168,87,.2)'">
+        <span style="font-size:24px;">🧾</span>
+        <div>
+          <div style="font-weight:600;font-size:14px;">Lihat Invoice Online</div>
+          <div style="font-size:12px;color:var(--muted);">Buka di tab baru, bisa screenshot atau share</div>
+        </div>
+        <span style="margin-left:auto;color:var(--accent);">→</span>
+      </a>
+
+      <!-- Download/Print PDF -->
+      <a href="/invoice/{{ order_code }}/download" target="_blank"
+         style="display:flex;align-items:center;gap:12px;background:rgba(78,205,196,.06);border:1px solid rgba(78,205,196,.2);border-radius:10px;padding:12px 16px;text-decoration:none;color:var(--text);transition:all .2s;"
+         onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='rgba(78,205,196,.2)'">
+        <span style="font-size:24px;">🖨️</span>
+        <div>
+          <div style="font-weight:600;font-size:14px;">Download PDF Invoice</div>
+          <div style="font-size:12px;color:var(--muted);">Print otomatis terbuka → pilih "Save as PDF"</div>
+        </div>
+        <span style="margin-left:auto;color:var(--teal);">→</span>
+      </a>
+
+      {% if wa_admin %}
+      <a href="{{ wa_admin }}" target="_blank"
+         style="display:flex;align-items:center;gap:12px;background:rgba(37,211,102,.06);border:1px solid rgba(37,211,102,.2);border-radius:10px;padding:12px 16px;text-decoration:none;color:var(--text);">
+        <span style="font-size:24px;">💬</span>
+        <div><div style="font-weight:600;font-size:14px;">Konfirmasi & kirim bukti bayar via WhatsApp</div>
+        <div style="font-size:12px;color:var(--muted);">Chat langsung ke admin toko dengan kode pesananmu</div></div>
+        <span style="margin-left:auto;color:#25d366;">→</span>
+      </a>
+      {% endif %}
+      <!-- Share invoice link -->
+      <div onclick="copyLink()"
+         style="display:flex;align-items:center;gap:12px;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);border-radius:10px;padding:12px 16px;cursor:pointer;color:var(--text);transition:all .2s;"
+         id="copyLinkBtn">
+        <span style="font-size:24px;">🔗</span>
+        <div>
+          <div style="font-weight:600;font-size:14px;">Salin Link Invoice</div>
+          <div style="font-size:12px;color:var(--muted);">Bagikan link invoice ke siapapun</div>
+        </div>
+        <span style="margin-left:auto;color:#a78bfa;" id="copyIcon">→</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;" class="fade-up d3">
+    <a class="btn btn-primary" href="/">← Lanjut Belanja</a>
+    <a class="btn btn-outline" href="/cek-invoice">🔍 Cek Invoice</a>
+  </div>
+</div>
+
+<script>
+function copyLink() {
+  const url = window.location.origin + '/invoice/{{ order_code }}';
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copyLinkBtn');
+    const icon = document.getElementById('copyIcon');
+    icon.textContent = '✅';
+    btn.style.borderColor = '#a78bfa';
+    setTimeout(() => { icon.textContent = '→'; btn.style.borderColor = 'rgba(167,139,250,.2)'; }, 2500);
+  });
+}
+</script>
+{% endblock %}

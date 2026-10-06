@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Edit Pesanan {{ order.order_code }} — Aqel Premium Vape{% endblock %}
+{% block content %}
+<div class="wrapper" style="max-width:680px;">
+  <div style="margin-bottom:24px;" class="fade-up">
+    <a href="/orders" style="color:var(--muted);text-decoration:none;font-size:13px;">← Kembali ke Pesanan</a>
+  </div>
+  <h1 class="page-title fade-up">✏️ Edit Pesanan</h1>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:28px;" class="fade-up d1">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--accent)">{{ order.order_code }}</span>
+      <span class="status-badge status-{{ order.status }}">{{ order.status }}</span>
+    </div>
+    <div style="font-size:13px;color:var(--muted);">Dibuat: {{ order.created_at }}</div>
+    {% if order['items'] %}
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;letter-spacing:.3px;">ITEM PESANAN</div>
+      {% for item in order['items'] %}
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(74,52,32,0.3);">
+        <span>{{ item.nama }} <span style="color:var(--muted)">× {{ item.get('qty',1) }}</span></span>
+        <span style="color:var(--accent);font-weight:700;">Rp {{ "{:,}".format((item.harga * item.get('qty',1))|int).replace(",",".") }}</span>
+      </div>
+      {% endfor %}
+      <div style="display:flex;justify-content:space-between;padding-top:10px;font-family:'Playfair Display',serif;font-weight:700;">
+        <span>Total</span><span style="color:var(--accent)">{{ order.total_fmt }}</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if order.history %}
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 24px;margin-bottom:28px;font-size:13px;" class="fade-up d2">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;letter-spacing:.3px;">RIWAYAT STATUS</div>
+    {% for h in order.history|reverse %}<div style="padding:3px 0;"><span class="status-badge status-{{ h.status }}">{{ h.status }}</span> <span style="color:var(--muted)">{{ h.created_at[:16] }}{% if h.catatan %} · {{ h.catatan }}{% endif %}</span></div>{% endfor %}
+  </div>
+  {% endif %}
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;" class="fade-up d2">
+    <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:16px;margin-bottom:24px;">Ubah Data Pesanan</div>
+    <form method="POST" action="/orders/{{ order.id }}/edit">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Nama Penerima</label>
+          <input class="form-input" type="text" name="nama" value="{{ order.nama }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. WhatsApp</label>
+          <input class="form-input" type="tel" name="no_hp" value="{{ order.no_hp or '' }}" placeholder="08xxxxxxxxxx">
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Alamat Pengiriman</label>
+          <textarea class="form-textarea" name="alamat" required>{{ order.alamat }}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" name="email" value="{{ order.email or '' }}" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status Pesanan</label>
+          <select class="form-select" name="status">
+            {% for s in ["Diproses","Dikirim","Selesai","Dibatalkan"] %}
+            <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status Pembayaran</label>
+          <select class="form-select" name="status_bayar">{% for s in ["Belum Bayar","Lunas"] %}<option {% if order.status_bayar==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Metode Bayar</label>
+          <select class="form-select" name="metode_bayar">{% for m in pay_methods %}<option {% if order.metode_bayar==m %}selected{% endif %}>{{ m }}</option>{% endfor %}</select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kurir</label>
+          <input class="form-input" name="kurir" value="{{ order.kurir }}" placeholder="JNE / J&T / SiCepat / GoSend">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. Resi</label>
+          <input class="form-input" name="resi" value="{{ order.resi }}" placeholder="Nomor resi pengiriman">
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Catatan untuk riwayat status (opsional)</label>
+          <input class="form-input" name="catatan_status" placeholder="Mis. Paket diserahkan ke kurir">
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Catatan</label>
+          <textarea class="form-textarea" name="catatan" placeholder="Catatan untuk pesanan ini...">{{ order.catatan or '' }}</textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button class="btn btn-primary" type="submit">💾 Simpan Perubahan</button>
+        <a class="btn btn-outline" href="/orders">Batal</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

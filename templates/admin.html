@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — {{ store.nama_toko }}{% endblock %}
+{% block extra_head %}
+<style>
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:28px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase;}
+.stat-val{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:auto;}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;margin-top:36px;flex-wrap:wrap;gap:8px;}
+.section-head h2{font-family:'Playfair Display',serif;font-weight:700;font-size:18px;}
+.two{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;}
+@media(max-width:800px){.two{grid-template-columns:1fr;}}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;}
+.panel h3{font-family:'Playfair Display',serif;font-size:15px;margin-bottom:14px;}
+.bars{display:flex;align-items:flex-end;gap:10px;height:150px;}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:10px;color:var(--muted);}
+.bar i{display:block;width:100%;background:linear-gradient(180deg,var(--accent),var(--accent2));border-radius:6px 6px 0 0;min-height:3px;}
+.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(74,52,32,.4);font-size:13px;}
+.row:last-child{border-bottom:none;}
+.stk{display:flex;gap:4px;align-items:center;}
+.stk input{width:58px;padding:5px 8px;font-size:12px;}
+.quick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrapper">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;" class="fade-up">
+    <h1 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;">⚙️ Admin Panel</h1>
+    <a class="btn btn-danger btn-sm" href="/admin/logout">🚪 Logout</a>
+  </div>
+
+  {% if default_pw %}
+  <div style="background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.3);color:#f4a4a4;border-radius:12px;padding:12px 18px;margin-bottom:20px;font-size:13px;">
+    ⚠️ Kamu masih memakai password bawaan. <a href="/admin/settings" style="color:var(--accent)">Ganti sekarang →</a>
+  </div>
+  {% endif %}
+
+  <div class="quick fade-up">
+    <a class="btn btn-secondary btn-sm" href="/orders">📋 Pesanan</a>
+    <a class="btn btn-secondary btn-sm" href="/admin/vouchers">🎟️ Voucher</a>
+    <a class="btn btn-secondary btn-sm" href="/admin/reviews">⭐ Ulasan</a>
+    <a class="btn btn-secondary btn-sm" href="/admin/settings">🛠️ Pengaturan</a>
+    <a class="btn btn-outline btn-sm" href="/orders/export-csv">📥 Export CSV</a>
+    <a class="btn btn-outline btn-sm" href="/admin/backup">💾 Backup DB</a>
+    <a class="btn btn-outline btn-sm" href="/">🏪 Ke Toko</a>
+  </div>
+
+  <div class="stat-grid fade-up d1">
+    <div class="stat-card"><div class="stat-label">Liquid</div><div class="stat-val" style="color:var(--accent)">{{ products|length }}</div></div>
+    <div class="stat-card"><div class="stat-label">Device</div><div class="stat-val" style="color:#a78bfa">{{ devices|length }}</div></div>
+    <div class="stat-card"><div class="stat-label">Total Pesanan</div><div class="stat-val">{{ stats.orders }}</div></div>
+    <div class="stat-card"><div class="stat-label">Perlu Diproses</div><div class="stat-val" style="color:var(--warning)">{{ stats.diproses }}</div></div>
+    <div class="stat-card"><div class="stat-label">Belum Bayar</div><div class="stat-val" style="color:#f4a4a4">{{ stats.belum_bayar }}</div></div>
+    <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-val" style="color:var(--accent);font-size:18px;">{{ stats.revenue }}</div></div>
+  </div>
+
+  <div class="two fade-up d2">
+    <div class="panel">
+      <h3>📈 Penjualan 7 Hari Terakhir</h3>
+      <div class="bars">
+        {% for c in chart %}<div class="bar" title="{{ c.fmt }}"><i style="height:{{ c.pct }}%"></i><span style="margin-top:6px">{{ c.label }}</span></div>{% endfor %}
+      </div>
+    </div>
+    <div class="panel">
+      <h3>🔥 Terlaris</h3>
+      {% for t in top %}<div class="row"><span>{{ loop.index }}. {{ t.nama }}</span><span style="color:var(--muted)">{{ t.qty }} pcs · <span class="price">{{ t.rev_fmt }}</span></span></div>
+      {% else %}<div style="color:var(--muted);font-size:13px;">Belum ada penjualan.</div>{% endfor %}
+    </div>
+  </div>
+
+  <div class="two fade-up d2" style="margin-top:20px;">
+    <div class="panel">
+      <h3>🕐 Pesanan Terbaru</h3>
+      {% for o in recent %}
+      <div class="row"><div><a href="/orders/{{ o.id }}/edit" style="font-family:'Playfair Display',serif;font-weight:700;color:var(--accent);text-decoration:none;">{{ o.order_code }}</a><div style="color:var(--muted);font-size:12px;">{{ o.nama }} · {{ o.created_at[:10] }}</div></div>
+        <div style="text-align:right"><span class="status-badge status-{{ o.status }}">{{ o.status }}</span><div class="price" style="font-size:13px;">{{ o.total_fmt }}</div></div></div>
+      {% else %}<div style="color:var(--muted);font-size:13px;">Belum ada pesanan.</div>{% endfor %}
+    </div>
+    <div class="panel">
+      <h3>📦 Stok Menipis (≤ {{ thr }})</h3>
+      {% for l in low %}<div class="row"><span>{{ l.nama }} <span style="color:var(--muted);font-size:11px;">{{ l.id }}</span></span><span class="pill {{ 'pill-out' if l.stok==0 else 'pill-low' }}">{{ 'Habis' if l.stok==0 else l.stok }}</span></div>
+      {% else %}<div style="color:var(--teal);font-size:13px;">✓ Semua stok aman.</div>{% endfor %}
+    </div>
+  </div>
+
+  <div class="fade-up d2">
+    <div class="section-head"><h2>💨 Daftar Liquid</h2><a class="btn btn-primary btn-sm" href="/admin/product/add">+ Tambah Liquid</a></div>
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Nikotin</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr></thead>
+      <tbody>
+        {% for p in products %}
+        <tr {% if not p.aktif %}style="opacity:.5"{% endif %}>
+          <td style="font-size:12px;color:var(--muted)">{{ p.id }}</td>
+          <td><strong>{{ p.nama }}</strong><br><span style="font-size:12px;color:var(--muted)">{{ p.rasa }} · {{ p.ukuran }}ml{% if not p.aktif %} · disembunyikan{% endif %}</span></td>
+          <td><span class="badge badge-{{ p.kategori|lower }}">{{ p.kategori }}</span></td>
+          <td style="font-size:13px;">{{ p.nikotin }}mg</td>
+          <td><span class="price" style="font-size:14px;">{{ p.harga_fmt }}</span></td>
+          <td><form class="stk" method="POST" action="/admin/stock/liquid/{{ p.id }}">
+            <span class="pill {{ 'pill-out' if p.stok==0 else ('pill-low' if p.stok<=thr else 'pill-ok') }}" style="min-width:34px;text-align:center">{{ p.stok }}</span>
+            <input class="form-input" type="number" name="delta" placeholder="±" required><button class="btn btn-outline btn-sm" type="submit">OK</button></form></td>
+          <td><div style="display:flex;gap:6px;">
+            <a class="btn btn-outline btn-sm" href="/admin/product/edit/{{ p.id }}">✏️</a>
+            <form method="POST" action="/admin/product/delete/{{ p.id }}" style="display:inline;" onsubmit="return confirm('Hapus {{ p.nama }}?')"><button class="btn btn-danger btn-sm" type="submit">🗑️</button></form>
+          </div></td>
+        </tr>
+        {% endfor %}
+      </tbody></table></div>
+  </div>
+
+  <div class="fade-up d3">
+    <div class="section-head"><h2>🎮 Daftar Device</h2><a class="btn btn-primary btn-sm" href="/admin/device/add">+ Tambah Device</a></div>
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Kode</th><th>Nama</th><th>Tipe</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr></thead>
+      <tbody>
+        {% for d in devices %}
+        <tr {% if not d.aktif %}style="opacity:.5"{% endif %}>
+          <td style="font-size:12px;color:var(--muted)">{{ d.id }}</td>
+          <td><strong>{{ d.nama }}</strong><br><span style="font-size:12px;color:var(--muted)">{{ d.merk }} · {{ d.warna|join(', ') }}</span></td>
+          <td><span class="badge badge-{{ d.tipe|lower }}">{{ d.tipe }}</span></td>
+          <td><span class="price" style="font-size:14px;">{{ d.harga_fmt }}</span></td>
+          <td><form class="stk" method="POST" action="/admin/stock/device/{{ d.id }}">
+            <span class="pill {{ 'pill-out' if d.stok==0 else ('pill-low' if d.stok<=thr else 'pill-ok') }}" style="min-width:34px;text-align:center">{{ d.stok }}</span>
+            <input class="form-input" type="number" name="delta" placeholder="±" required><button class="btn btn-outline btn-sm" type="submit">OK</button></form></td>
+          <td><div style="display:flex;gap:6px;">
+            <a class="btn btn-outline btn-sm" href="/admin/device/edit/{{ d.id }}">✏️</a>
+            <form method="POST" action="/admin/device/delete/{{ d.id }}" style="display:inline;" onsubmit="return confirm('Hapus {{ d.nama }}?')"><button class="btn btn-danger btn-sm" type="submit">🗑️</button></form>
+          </div></td>
+        </tr>
+        {% endfor %}
+      </tbody></table></div>
+  </div>
+
+  <div class="fade-up d3">
+    <div class="section-head"><h2>🧮 Mutasi Stok Terakhir</h2></div>
+    <div class="panel">
+      {% for l in stock_logs %}<div class="row"><span>{{ l.item_id }} · {{ l.alasan }}{% if l.ref %} <span style="color:var(--muted)">({{ l.ref }})</span>{% endif %}</span>
+        <span><strong style="color:{{ 'var(--teal)' if l.perubahan>0 else '#f4a4a4' }}">{{ '%+d'|format(l.perubahan) }}</strong> → {{ l.stok_akhir }} <span style="color:var(--muted);font-size:11px;">{{ l.created_at[5:16] }}</span></span></div>
+      {% else %}<div style="color:var(--muted);font-size:13px;">Belum ada mutasi.</div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

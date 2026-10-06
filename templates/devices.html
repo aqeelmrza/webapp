@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Device — Aqel Premium Vape{% endblock %}
+{% block extra_head %}
+<style>
+.filter-bar{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;align-items:center;}
+.filter-btn{padding:8px 20px;border-radius:100px;border:1px solid var(--border);background:var(--card);color:var(--muted);text-decoration:none;font-size:13px;transition:all .2s;}
+.filter-btn:hover,.filter-btn.active{background:var(--accent);color:#1a1008;border-color:var(--accent);font-weight:600;}
+.device-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;}
+.dev-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .25s;text-decoration:none;display:block;}
+.dev-card:hover{transform:translateY(-5px);border-color:rgba(167,139,250,.4);box-shadow:0 16px 40px rgba(167,139,250,.08);}
+.dev-icon{background:linear-gradient(135deg,var(--surface),var(--card));padding:32px;display:flex;align-items:center;justify-content:center;font-size:60px;border-bottom:1px solid var(--border);}
+.dev-body{padding:20px;}
+.dev-merk{font-size:11px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
+.dev-nama{font-family:'Playfair Display',serif;font-weight:700;font-size:16px;margin-bottom:10px;color:var(--text);}
+.dev-colors{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.color-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.15);}
+.dev-price{font-family:'Playfair Display',serif;font-weight:700;color:var(--accent);font-size:15px;}
+.search-row{display:flex;gap:8px;margin-bottom:16px;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrapper">
+  <h1 class="page-title fade-up">🎮 Daftar Device</h1>
+
+  <form method="GET" action="/devices" class="search-row fade-up d1">
+    <input class="form-input" type="text" name="q" value="{{ q }}" placeholder="🔍  Cari nama atau merk device..." style="flex:1;">
+    {% if active_tipe != 'Semua' %}<input type="hidden" name="tipe" value="{{ active_tipe }}">{% endif %}
+    <button class="btn btn-primary" type="submit">Cari</button>
+    {% if q %}<a class="btn btn-outline" href="/devices?tipe={{ active_tipe }}">✕</a>{% endif %}
+  </form>
+
+  <div class="filter-bar fade-up d1">
+    {% for t in ["Semua","Pod","Mod"] %}
+    <a class="filter-btn {% if active_tipe==t %}active{% endif %}" href="/devices?tipe={{ t }}{% if q %}&q={{ q }}{% endif %}">
+      {% if t=="Pod" %}🟢 {% elif t=="Mod" %}🔴 {% endif %}{{ t }}
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if devices %}
+  <div class="device-grid fade-up d2">
+    {% for d in devices %}
+    {% set color_map = {
+      'Black':'#1a1a1a','White':'#f0f0f0','Navy Blue':'#1a3060','Red':'#c0392b',
+      'Gold':'#d4af37','Aurora Gradient':'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+      'Silver':'#aaa','Blue':'#2563eb','Purple':'#7c3aed','Green':'#16a34a',
+      'Orange':'#ea580c','Gunmetal':'#4a4a52','Rose Gold':'#b76e79',
+      'Rainbow':'linear-gradient(135deg,#f00,#f90,#ff0,#0f0,#00f,#90f)',
+      'Black Leather':'#1a0a00','Blue Leather':'#0a1f40','Brown Leather':'#3d1a00',
+      'Carbon Fiber':'#2a2a2a','Gradient':'linear-gradient(135deg,#4facfe,#00f2fe)',
+      'Grey':'#6b7280'
+    } %}
+    <a class="dev-card" href="/device/{{ d.id }}">
+      <div class="dev-icon">{% if d.tipe=='Pod' %}🎯{% else %}⚡{% endif %}</div>
+      <div class="dev-body">
+        <div class="dev-merk">{{ d.merk }} · <span class="badge badge-{{ d.tipe|lower }}">{{ d.tipe }}</span></div>
+        <div class="dev-nama">{{ d.nama }}</div>
+        <div class="dev-colors">
+          {% for w in d.warna %}
+          {% set bg = color_map.get(w,'#444') %}
+          <div class="color-dot" style="background:{{ bg }}" title="{{ w }}"></div>
+          {% endfor %}
+        </div>
+        <div class="dev-price">{{ d.harga_fmt }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:80px 20px;color:var(--muted);" class="fade-up">
+    <div style="font-size:56px;margin-bottom:16px;">🔍</div>
+    <p>Tidak ada device ditemukan.</p>
+    <br><a class="btn btn-outline" href="/devices">Lihat Semua</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

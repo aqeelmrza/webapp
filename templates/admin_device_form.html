@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{% if mode=="add" %}Tambah Device{% else %}Edit Device{% endif %} — Aqel Premium Vape{% endblock %}
+{% block content %}
+<div class="wrapper" style="max-width:640px;">
+  <div style="margin-bottom:24px;" class="fade-up">
+    <a href="/admin" style="color:var(--muted);text-decoration:none;font-size:13px;">← Kembali ke Admin</a>
+  </div>
+  <h1 class="page-title fade-up">{% if mode=="add" %}➕ Tambah Device{% else %}✏️ Edit Device{% endif %}</h1>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;" class="fade-up d1">
+    <form method="POST">
+      {% if mode=="add" %}
+      <div class="form-group">
+        <label class="form-label">Kode Device <span style="color:var(--danger)">*</span></label>
+        <input class="form-input" type="text" name="id" placeholder="Contoh: D05, M05..." maxlength="10" required style="text-transform:uppercase;">
+      </div>
+      {% endif %}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Nama Device <span style="color:var(--danger)">*</span></label>
+          <input class="form-input" type="text" name="nama" value="{{ device.nama if device else '' }}" placeholder="Nama device..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Merk</label>
+          <input class="form-input" type="text" name="merk" value="{{ device.merk if device else '' }}" placeholder="SMOK, Aspire, RELX...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipe</label>
+          <select class="form-select" name="tipe">
+            {% for t in ["Pod","Mod"] %}
+            <option value="{{ t }}" {% if device and device.tipe==t %}selected{% endif %}>{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Harga Min (Rp)</label>
+          <input class="form-input" type="number" name="harga_min" value="{{ device.harga_min if device else '' }}" placeholder="350000" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Harga Max (Rp)</label>
+          <input class="form-input" type="number" name="harga_max" value="{{ device.harga_max if device else '' }}" placeholder="450000" min="0">
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Warna (pisahkan dengan koma)</label>
+          <input class="form-input" type="text" name="warna_list"
+            value="{{ device.warna | join(', ') if device else '' }}"
+            placeholder="Black, White, Red, Blue...">
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Contoh: Black, Silver, Blue, Purple</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stok</label>
+          <input class="form-input" type="number" name="stok" min="0" value="{{ device.stok if device else 0 }}">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <label style="display:flex;gap:8px;align-items:center;cursor:pointer;padding-bottom:12px;">
+            <input type="checkbox" name="aktif" value="1" {% if not device or device.aktif %}checked{% endif %}> Tampilkan di toko
+          </label>
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Deskripsi</label>
+          <textarea class="form-textarea" name="deskripsi" placeholder="Deskripsi device...">{{ device.deskripsi if device else '' }}</textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button class="btn btn-primary" type="submit">{% if mode=="add" %}➕ Tambah Device{% else %}💾 Simpan{% endif %}</button>
+        <a class="btn btn-outline" href="/admin">Batal</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

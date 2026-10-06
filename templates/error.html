@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Oops {{ code }} — {{ store.nama_toko }}{% endblock %}
+{% block content %}
+<div class="wrapper" style="text-align:center;padding-top:90px;max-width:560px;">
+  <div style="font-size:72px;margin-bottom:12px;">{{ '🔎' if code == 404 else '⚠️' }}</div>
+  <h1 style="font-family:'Playfair Display',serif;font-size:40px;color:var(--accent);">{{ code }}</h1>
+  <p style="color:var(--muted);margin:12px 0 28px;">{{ message }}</p>
+  <a class="btn btn-primary" href="/">← Kembali ke Toko</a>
+</div>
+{% endblock %}

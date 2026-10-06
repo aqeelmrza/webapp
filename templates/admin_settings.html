@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Pengaturan — {{ store.nama_toko }}{% endblock %}
+{% block content %}
+<div class="wrapper" style="max-width:720px;">
+  <a href="/admin" style="color:var(--muted);text-decoration:none;font-size:13px;">← Kembali ke Admin</a>
+  <h1 class="page-title" style="margin-top:14px;">🛠️ Pengaturan Toko</h1>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:24px;">
+    <form method="POST" action="/admin/settings">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group"><label class="form-label">Nama Toko</label><input class="form-input" name="nama_toko" value="{{ s.nama_toko }}"></div>
+        <div class="form-group"><label class="form-label">Tagline</label><input class="form-input" name="tagline" value="{{ s.tagline }}"></div>
+        <div class="form-group"><label class="form-label">WhatsApp Admin (628...)</label><input class="form-input" name="wa_admin" value="{{ s.wa_admin }}"></div>
+        <div class="form-group"><label class="form-label">Batas stok menipis</label><input class="form-input" type="number" name="stok_menipis" value="{{ s.stok_menipis }}" min="0"></div>
+        <div class="form-group"><label class="form-label">Ongkir flat (Rp, 0 = gratis)</label><input class="form-input" type="number" name="ongkir_flat" value="{{ s.ongkir_flat }}" min="0"></div>
+        <div class="form-group"><label class="form-label">Gratis ongkir min. belanja (0 = nonaktif)</label><input class="form-input" type="number" name="gratis_ongkir_min" value="{{ s.gratis_ongkir_min }}" min="0"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Info pembayaran (tampil di checkout & invoice)</label><textarea class="form-textarea" name="info_bayar">{{ s.info_bayar }}</textarea></div>
+      </div>
+      <button class="btn btn-primary" type="submit">💾 Simpan</button>
+    </form>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:24px;">
+    <div style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:14px;">🔑 Ganti Password ({{ admin_user }})</div>
+    <form method="POST" action="/admin/password">
+      <div class="form-group"><input class="form-input" type="password" name="lama" placeholder="Password lama" required></div>
+      <div class="form-group"><input class="form-input" type="password" name="baru" placeholder="Password baru (min. 8 karakter)" minlength="8" required></div>
+      <div class="form-group"><input class="form-input" type="password" name="ulang" placeholder="Ulangi password baru" required></div>
+      <button class="btn btn-secondary" type="submit">Ganti Password</button>
+    </form>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;">
+    <div style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:6px;">✉️ Email Otomatis (Gmail)</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+      Status: {% if mail_ok %}<span class="pill pill-ok">Terhubung</span>{% else %}<span class="pill pill-low">Belum diset</span> — set variabel <code>GMAIL_USER</code> & <code>GMAIL_PASS</code> (App Password) lalu restart.{% endif %}
+    </p>
+    <form method="POST" action="/admin/test-email" style="display:flex;gap:8px;">
+      <input class="form-input" type="email" name="to" placeholder="Kirim email tes ke..." required>
+      <button class="btn btn-outline" type="submit">Kirim Tes</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

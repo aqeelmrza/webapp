@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ order.order_code }} — Aqel Premium Vape{% endblock %}
+{% block extra_head %}
+<style>
+@media print{nav,footer,.no-print{display:none!important;}body{background:#fff!important;color:#000!important;}.inv-box{box-shadow:none!important;border:none!important;max-width:100%!important;}}
+.inv-actions{max-width:800px;margin:24px auto 16px;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+.inv-box{max-width:800px;margin:0 auto 60px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.inv-header{background:linear-gradient(135deg,var(--surface),var(--card));padding:32px 40px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--border);}
+.inv-brand{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--accent);}
+.inv-brand span{color:var(--text);}
+.inv-label{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:rgba(255,255,255,.06);letter-spacing:4px;}
+.inv-meta{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:28px 40px;border-bottom:1px solid var(--border);}
+.meta-label{font-size:11px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;}
+.meta-val{font-size:14px;color:var(--text);line-height:1.7;}
+.meta-val strong{color:var(--accent);font-family:'Playfair Display',serif;}
+.inv-items{padding:0 40px;}
+.inv-tbl{width:100%;border-collapse:collapse;margin:24px 0;}
+.inv-tbl th{padding:10px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.inv-tbl td{padding:14px 12px;font-size:14px;border-bottom:1px solid rgba(74,52,32,.3);vertical-align:middle;}
+.inv-tbl tr:last-child td{border-bottom:none;}
+.inv-total{padding:20px 40px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;}
+.total-box{min-width:280px;}
+.total-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;color:var(--muted);}
+.total-row.grand{border-top:1px solid var(--border);margin-top:8px;padding-top:14px;font-size:18px;font-family:'Playfair Display',serif;font-weight:700;color:var(--text);}
+.total-row.grand span:last-child{color:var(--accent);}
+.inv-note{padding:20px 40px 32px;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--border);line-height:1.7;}
+.wa-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.25);padding:8px 18px;border-radius:10px;font-size:13px;text-decoration:none;transition:all .2s;font-family:'Outfit',sans-serif;}
+.wa-btn:hover{background:rgba(37,211,102,.18);}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="inv-actions no-print fade-up">
+  <a href="/invoice/{{ order.order_code }}/download" target="_blank" class="btn btn-primary">🖨️ Download PDF</a>
+  {% if order.no_hp %}
+  {% set wa_num = order.no_hp | replace('+','') | replace('-','') | replace(' ','') %}
+  {% set wa_msg = "Invoice Pesanan " ~ order.order_code ~ " - Aqel Premium Vape\nTotal: " ~ order.total_fmt %}
+  <a href="https://wa.me/{{ wa_num }}?text={{ wa_msg | urlencode }}" target="_blank" class="wa-btn">💬 WhatsApp</a>
+  {% endif %}
+  <button class="btn btn-outline" onclick="copyInvLink()">🔗 Salin Link</button>
+  <a class="btn btn-outline" href="javascript:history.back()">← Kembali</a>
+</div>
+
+<div class="inv-box fade-up d1">
+  <div class="inv-header">
+    <div>
+      <div class="inv-brand">AQEL <span>PREMIUM VAPE</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">Aqel Premium Vape Collection</div>
+    </div>
+    <div class="inv-label">INVOICE</div>
+  </div>
+
+  <div class="inv-meta">
+    <div>
+      <div class="meta-label">Kepada</div>
+      <div class="meta-val">
+        <strong>{{ order.nama }}</strong><br>
+        {{ order.alamat }}<br>
+        {% if order.no_hp %}📱 {{ order.no_hp }}<br>{% endif %}
+        {% if order.email %}<span style="color:var(--muted)">{{ order.email }}</span>{% endif %}
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div class="meta-label">Detail Invoice</div>
+      <div class="meta-val">
+        No: <strong>{{ order.order_code }}</strong><br>
+        Tanggal: {{ order.created_at }}<br>
+        Status: <span class="status-badge status-{{ order.status }}">{{ order.status }}</span>
+        {% if order.catatan %}<br><span style="color:var(--muted);font-size:12px;">Catatan: {{ order.catatan }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="inv-items">
+    <table class="inv-tbl">
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th>Produk</th>
+          <th>Detail</th>
+          <th style="text-align:center">Qty</th>
+          <th style="text-align:right">Harga</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order['items'] %}
+        <tr>
+          <td style="color:var(--muted)">{{ loop.index }}</td>
+          <td><strong>{{ item.nama }}</strong></td>
+          <td style="color:var(--muted);font-size:13px;">
+            {% if item.get('type') == 'device' %}🎨 {{ item.warna }} · {{ item.merk }}
+            {% else %}{{ item.rasa }} · {{ item.nikotin }}mg · {{ item.ukuran }}ml{% endif %}
+          </td>
+          <td style="text-align:center;">{{ item.get('qty',1) }}</td>
+          <td style="text-align:right;font-family:'Playfair Display',serif;font-weight:700;color:var(--accent);">
+            Rp {{ "{:,}".format((item.harga * item.get('qty',1))|int).replace(",",".") }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="inv-total">
+    <div class="total-box">
+      <div class="total-row"><span>Subtotal ({{ order['items']|length }} item)</span><span>{{ order.subtotal_fmt }}</span></div>
+      {% if order.diskon %}<div class="total-row"><span>Diskon {{ order.voucher_kode or '' }}</span><span style="color:var(--teal)">− {{ order.diskon_fmt }}</span></div>{% endif %}
+      <div class="total-row"><span>Ongkos Kirim</span>{% if order.ongkir %}<span>{{ order.ongkir_fmt }}</span>{% else %}<span style="color:var(--teal)">Gratis ✓</span>{% endif %}</div>
+      <div class="total-row grand"><span>Total</span><span>{{ order.total_fmt }}</span></div>
+    </div>
+  </div>
+
+  <div style="padding:20px 40px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:24px;font-size:13px;">
+    <div>
+      <div class="meta-label">Pembayaran</div>
+      {{ order.metode_bayar }} — <strong style="color:{{ 'var(--teal)' if order.status_bayar=='Lunas' else 'var(--accent)' }}">{{ order.status_bayar }}</strong>
+      {% if order.kurir or order.resi %}<div class="meta-label" style="margin-top:12px;">Pengiriman</div>{{ order.kurir }} {% if order.resi %}· Resi <strong>{{ order.resi }}</strong>{% endif %}{% endif %}
+    </div>
+    <div class="no-print">
+      <div class="meta-label">Lacak Pesanan</div>
+      {% for h in order.history|reverse %}
+      <div style="padding:3px 0;"><span class="status-badge status-{{ h.status }}">{{ h.status }}</span>
+        <span style="color:var(--muted);font-size:11px;"> {{ h.created_at[:16] }}</span>{% if h.catatan %}<div style="color:var(--muted);font-size:12px;">{{ h.catatan }}</div>{% endif %}</div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="inv-note">
+    Terima kasih telah berbelanja di <strong style="color:var(--accent)">Aqel Premium Vape Collection</strong>.<br>
+    Simpan invoice ini sebagai bukti pembelian.<br>
+    <span style="color:rgba(154,126,98,.4)">{{ order.order_code }} · {{ order.created_at }}</span>
+  </div>
+</div>
+
+<script>
+function copyInvLink(){
+  navigator.clipboard.writeText(window.location.href).then(()=>{
+    const b = event.target;
+    b.textContent='✅ Tersalin!';
+    setTimeout(()=>b.textContent='🔗 Salin Link',2000);
+  });
+}
+</script>
+{% endblock %}

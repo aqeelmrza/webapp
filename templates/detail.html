@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}{{ product.nama }} — VapeStore{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── BREADCRUMB ── */
+  .breadcrumb {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 32px;
+  }
+  .breadcrumb a { color: var(--muted); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--accent); }
+  .breadcrumb-sep { opacity: .4; }
+
+  /* ── DETAIL LAYOUT ── */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 40px; margin-bottom: 64px;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── PRODUCT VISUAL ── */
+  .product-visual {
+    background: linear-gradient(145deg, var(--surface), var(--card));
+    border: 1px solid var(--border);
+    border-radius: 20px; height: 320px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 100px; position: relative; overflow: hidden;
+  }
+  .product-visual::after {
+    content: '';
+    position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 100px;
+    background: radial-gradient(ellipse, rgba(232,168,87,0.15), transparent 70%);
+  }
+
+  /* ── PRODUCT INFO ── */
+  .product-header { margin-bottom: 24px; }
+
+  .product-header .badge { margin-bottom: 12px; }
+
+  .product-header h1 {
+    font-family: 'Playfair Display',serif;
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800; letter-spacing: -0.5px;
+    line-height: 1.2; margin-bottom: 8px;
+  }
+
+  .product-desc { color: var(--muted); margin-bottom: 24px; line-height: 1.7; }
+
+  /* ── SPECS TABLE ── */
+  .specs {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 24px;
+  }
+  .spec-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .spec-row:last-child { border-bottom: none; }
+  .spec-label { color: var(--muted); }
+  .spec-value { font-weight: 500; }
+
+  /* ── PRICE ROW ── */
+  .price-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .price-big {
+    font-family: 'Playfair Display',serif;
+    font-size: 32px; font-weight: 800; color: var(--accent);
+  }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 48px 0 32px; }
+
+  /* ── RECOMMENDATION ── */
+  .rec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .rec-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+    text-decoration: none; color: inherit;
+    display: block; transition: all .2s;
+  }
+  .rec-card:hover {
+    border-color: rgba(232,168,87,0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(232,168,87,0.08);
+  }
+  .rec-icon { font-size: 36px; margin-bottom: 10px; }
+  .rec-name { font-family: 'Playfair Display',serif; font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .rec-info { font-size: 12px; color: var(--muted); }
+  .rec-price { font-size: 14px; color: var(--accent); font-weight: 700; margin-top: 8px; font-family: 'Playfair Display',serif; }
+
+  /* ── AI BADGE ── */
+  .ai-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(232,168,87,0.12); color: var(--accent);
+    border: 1px solid rgba(232,168,87,0.2);
+    padding: 5px 14px; border-radius: 100px; font-size: 12px;
+    margin-bottom: 20px;
+  }
+.section-title{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:18px;}
+  .star-input{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:4px;}
+  .star-input input{display:none;}
+  .star-input label{font-size:28px;color:var(--border);cursor:pointer;transition:color .15s;}
+  .star-input input:checked ~ label,.star-input label:hover,.star-input label:hover ~ label{color:var(--accent);}
+  .review{border-bottom:1px solid var(--border);padding:14px 0;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb fade-up">
+    <a href="/">Produk</a>
+    <span class="breadcrumb-sep">›</span>
+    <span>{{ product.nama }}</span>
+  </div>
+
+  <!-- DETAIL -->
+  <div class="detail-grid fade-up delay-1">
+
+    <!-- LEFT: Visual -->
+    <div class="product-visual">
+      {% if product.kategori == "Fruity" %}🍓
+      {% elif product.kategori == "Creamy" %}🍰
+      {% else %}🍮{% endif %}
+    </div>
+
+    <!-- RIGHT: Info -->
+    <div>
+      <div class="product-header">
+        <span class="badge badge-{{ product.kategori|lower }}">{{ product.kategori }}</span>
+        <h1>{{ product.nama }}</h1>
+        <p class="product-desc">{{ product.deskripsi }}</p>
+      </div>
+
+      <!-- SPECS -->
+      <div class="specs">
+        <div class="spec-row">
+          <span class="spec-label">Rasa</span>
+          <span class="spec-value">{{ product.rasa }}</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-label">Nikotin</span>
+          <span class="spec-value">{{ product.nikotin }} mg</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-label">Ukuran</span>
+          <span class="spec-value">{{ product.ukuran }} ml</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-label">Stok</span>
+          <span class="spec-value">{% if product.stok <= 0 %}<span class="pill pill-out">Habis</span>{% elif low_stock %}<span class="pill pill-low">Tersisa {{ product.stok }}</span>{% else %}<span class="pill pill-ok">Tersedia</span>{% endif %}</span>
+        </div>
+        <div class="spec-row">
+          <span class="spec-label">Kode Produk</span>
+          <span class="spec-value" style="color:var(--muted)">{{ product.id }}</span>
+        </div>
+      </div>
+
+      <!-- PRICE + ADD -->
+      <div class="price-row">
+        <div class="price-big">{{ product.harga_fmt }}</div>
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        {% if product.stok > 0 %}
+        <a class="btn btn-primary" href="/add_to_cart/{{ product.id }}">🛒 Tambah ke Keranjang</a>
+        {% else %}
+        <span class="btn btn-outline" style="opacity:.6;cursor:not-allowed;">Stok Habis</span>
+        {% endif %}
+        <a class="btn btn-outline" href="/">← Kembali</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div id="ulasan" class="fade-up" style="margin-bottom:48px;">
+    <h2 class="section-title">⭐ Ulasan Pelanggan {% if reviews %}<span style="font-size:14px;color:var(--muted);font-family:'Outfit',sans-serif;">— {{ avg_rating }}/5 dari {{ reviews|length }} ulasan</span>{% endif %}</h2>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:32px;" class="review-grid">
+      <div>
+        {% for r in reviews %}
+        <div class="review">
+          <div><strong>{{ r.nama }}</strong> <span class="stars">{{ '★' * r.rating }}</span><span class="stars-off">{{ '★' * (5 - r.rating) }}</span>
+            <span style="font-size:11px;color:var(--muted);margin-left:6px;">{{ r.created_at[:10] }}</span></div>
+          {% if r.komentar %}<p style="color:var(--muted);font-size:14px;margin-top:4px;">{{ r.komentar }}</p>{% endif %}
+        </div>
+        {% else %}
+        <p style="color:var(--muted);">Belum ada ulasan. Jadilah yang pertama!</p>
+        {% endfor %}
+      </div>
+      <form method="POST" action="/product/{{ product.id }}/review" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;height:fit-content;">
+        <div style="font-weight:600;margin-bottom:12px;">Tulis ulasan</div>
+        <div class="form-group"><input class="form-input" name="nama" maxlength="40" placeholder="Nama kamu" required></div>
+        <div class="form-group"><div class="star-input">
+          {% for n in [5,4,3,2,1] %}<input type="radio" id="st{{ n }}" name="rating" value="{{ n }}" {% if n==5 %}required{% endif %}><label for="st{{ n }}">★</label>{% endfor %}
+        </div></div>
+        <div class="form-group"><textarea class="form-textarea" name="komentar" maxlength="500" placeholder="Ceritakan pengalamanmu..."></textarea></div>
+        <button class="btn btn-primary btn-sm" type="submit">Kirim Ulasan</button>
+      </form>
+    </div>
+  </div>
+  <style>@media(max-width:720px){.review-grid{grid-template-columns:1fr !important;}}</style>
+
+  <!-- DIVIDER -->
+  <div class="divider"></div>
+
+  <!-- RECOMMENDATIONS -->
+  {% if recommendations %}
+  <div class="fade-up">
+    <div class="ai-badge">
+      🤖 AI Recommendation — Content-Based Filtering
+    </div>
+    <h2 class="section-title">Produk yang Mungkin Kamu Suka</h2>
+
+    <div class="rec-grid">
+      {% for r in recommendations %}
+      <a class="rec-card" href="/product/{{ r.id }}">
+        <div class="rec-icon">
+          {% if r.kategori == "Fruity" %}🍓
+          {% elif r.kategori == "Creamy" %}🍰
+          {% else %}🍮{% endif %}
+        </div>
+        <div class="rec-name">{{ r.nama }}</div>
+        <div class="rec-info">{{ r.rasa }} · {{ r.nikotin }}mg · {{ r.ukuran }}ml</div>
+        <div class="rec-price">{{ r.harga_fmt }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

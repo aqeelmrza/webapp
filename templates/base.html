@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{{ store.nama_toko }}{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#1a1008; --surface:#231709; --card:#2e1f0e; --border:#4a3420;
+  --accent:#e8a857; --accent2:#c96b3a; --teal:#4ecdc4;
+  --text:#f5e8d0; --muted:#9a7e62; --smoke:#d4b896;
+  --danger:#e05252; --warning:#e8a857; --success:#4ecdc4;
+  --radius:16px; --shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif; font-size:15px; line-height:1.65; min-height:100vh; }
+nav { position:sticky; top:0; z-index:100; background:rgba(26,16,8,0.95); backdrop-filter:blur(24px); border-bottom:1px solid var(--border); padding:0 28px; display:flex; align-items:center; justify-content:space-between; height:66px; }
+.nav-brand { font-family:'Playfair Display',serif; font-weight:900; font-size:20px; color:var(--accent); text-decoration:none; letter-spacing:.5px; display:flex; flex-direction:column; line-height:1; }
+.nav-brand-sub { font-family:'Outfit',sans-serif; font-size:10px; font-weight:300; color:var(--muted); letter-spacing:2.5px; text-transform:uppercase; margin-top:3px; }
+.nav-links { display:flex; align-items:center; gap:4px; }
+.nav-link { color:var(--muted); text-decoration:none; font-size:13px; font-weight:400; padding:7px 14px; border-radius:100px; transition:all .25s; }
+.nav-link:hover, .nav-link.active { color:var(--text); background:rgba(232,168,87,0.08); }
+.nav-link.device-link { color:#a78bfa; }
+.nav-link.device-link:hover { color:#c4b5fd; background:rgba(167,139,250,0.08); }
+.nav-link.admin-link { color:var(--accent); }
+.nav-link.admin-link:hover { background:rgba(232,168,87,0.1); }
+.cart-btn { display:flex; align-items:center; gap:8px; background:transparent; border:1px solid var(--border); color:var(--text); padding:8px 18px; border-radius:100px; font-size:13px; text-decoration:none; transition:all .25s; margin-left:8px; font-family:'Outfit',sans-serif; }
+.cart-btn:hover { border-color:var(--accent); color:var(--accent); }
+.cart-badge { background:var(--accent); color:#1a1008; font-size:11px; font-weight:700; padding:1px 8px; border-radius:100px; }
+.flash-wrap { position:fixed; top:76px; right:20px; z-index:999; display:flex; flex-direction:column; gap:8px; }
+.flash { padding:12px 20px; border-radius:10px; font-size:14px; font-weight:500; border:1px solid; max-width:320px; animation:slideIn .3s ease; box-shadow:var(--shadow); font-family:'Outfit',sans-serif; }
+.flash.success { background:rgba(78,205,196,.1); border-color:rgba(78,205,196,.25); color:#4ecdc4; }
+.flash.error   { background:rgba(224,82,82,.1); border-color:rgba(224,82,82,.25); color:#f4a4a4; }
+.flash.info    { background:rgba(232,168,87,.1); border-color:rgba(232,168,87,.25); color:var(--accent); }
+@keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+.wrapper { max-width:1160px; margin:0 auto; padding:44px 28px; }
+.btn { display:inline-flex; align-items:center; gap:8px; padding:10px 22px; border-radius:10px; font-size:14px; font-weight:500; font-family:'Outfit',sans-serif; cursor:pointer; border:none; text-decoration:none; transition:all .2s; white-space:nowrap; }
+.btn-primary { background:var(--accent); color:#1a1008; }
+.btn-primary:hover { background:#f0b96a; transform:translateY(-1px); box-shadow:0 6px 16px rgba(232,168,87,0.25); }
+.btn-secondary { background:rgba(201,107,58,.12); color:#e8956a; border:1px solid rgba(201,107,58,.25); }
+.btn-secondary:hover { background:rgba(201,107,58,.2); }
+.btn-outline { background:transparent; color:var(--text); border:1px solid var(--border); }
+.btn-outline:hover { border-color:var(--accent); color:var(--accent); }
+.btn-danger { background:transparent; color:var(--danger); border:1px solid rgba(224,82,82,.3); }
+.btn-danger:hover { background:rgba(224,82,82,.1); }
+.btn-sm { padding:6px 14px; font-size:12px; }
+.badge { display:inline-block; padding:3px 11px; border-radius:100px; font-size:12px; font-weight:500; }
+.badge-fruity  { background:rgba(78,205,196,.1); color:var(--teal); }
+.badge-creamy  { background:rgba(232,168,87,.1); color:var(--accent); }
+.badge-dessert { background:rgba(201,107,58,.12); color:#e8956a; }
+.badge-pod     { background:rgba(78,205,196,.1); color:var(--teal); }
+.badge-mod     { background:rgba(224,82,82,.1); color:#f4a4a4; }
+.status-badge { display:inline-block; padding:3px 11px; border-radius:100px; font-size:12px; font-weight:600; font-family:'Playfair Display',serif; }
+.status-Diproses   { background:rgba(232,168,87,.12); color:var(--accent); }
+.status-Dikirim    { background:rgba(167,139,250,.12); color:#a78bfa; }
+.status-Selesai    { background:rgba(78,205,196,.1); color:var(--teal); }
+.status-Dibatalkan { background:rgba(224,82,82,.1); color:#f4a4a4; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:transform .25s,border-color .25s,box-shadow .25s; }
+.card:hover { transform:translateY(-4px); border-color:rgba(232,168,87,.3); box-shadow:0 16px 40px rgba(232,168,87,.06); }
+.form-group { margin-bottom:18px; }
+.form-label { font-size:11px; color:var(--muted); margin-bottom:7px; display:block; letter-spacing:.8px; text-transform:uppercase; font-weight:500; }
+.form-input,.form-select,.form-textarea { width:100%; padding:11px 15px; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:14px; font-family:'Outfit',sans-serif; outline:none; transition:all .25s; }
+.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--accent); background:rgba(232,168,87,.04); box-shadow:0 0 0 3px rgba(232,168,87,.07); }
+.form-input::placeholder,.form-textarea::placeholder { color:rgba(154,126,98,.55); }
+.form-select option { background:var(--surface); }
+.form-textarea { resize:vertical; min-height:80px; }
+.data-table { width:100%; border-collapse:collapse; }
+.data-table th { padding:10px 16px; text-align:left; font-size:11px; color:var(--muted); font-weight:500; letter-spacing:.6px; border-bottom:1px solid var(--border); text-transform:uppercase; }
+.data-table td { padding:14px 16px; font-size:14px; border-bottom:1px solid rgba(74,52,32,.5); vertical-align:middle; }
+.data-table tr:last-child td { border-bottom:none; }
+.data-table tr:hover td { background:rgba(232,168,87,.025); }
+.price { font-family:'Playfair Display',serif; font-weight:700; color:var(--accent); }
+.page-title { font-family:'Playfair Display',serif; font-size:30px; font-weight:700; margin-bottom:32px; letter-spacing:-.3px; color:var(--text); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+.fade-up { animation:fadeUp .45s ease both; }
+.d1 { animation-delay:.08s; } .d2 { animation-delay:.16s; } .d3 { animation-delay:.24s; }
+footer { margin-top:80px; border-top:1px solid var(--border); padding:26px 28px; text-align:center; color:var(--muted); font-size:12px; letter-spacing:.3px; }
+footer span { color:var(--accent); }
+.stars { color:var(--accent); letter-spacing:1px; }
+.stars-off { color:var(--border); }
+.pager { display:flex; gap:6px; justify-content:center; margin-top:36px; flex-wrap:wrap; }
+.pager a, .pager span { padding:7px 14px; border-radius:10px; border:1px solid var(--border); color:var(--muted); text-decoration:none; font-size:13px; background:var(--card); }
+.pager a:hover { border-color:var(--accent); color:var(--accent); }
+.pager .cur { background:var(--accent); color:#1a1008; border-color:var(--accent); font-weight:600; }
+.pill { display:inline-block; padding:2px 10px; border-radius:100px; font-size:11px; font-weight:600; }
+.pill-out { background:rgba(224,82,82,.12); color:#f4a4a4; }
+.pill-low { background:rgba(232,168,87,.12); color:var(--accent); }
+.pill-ok  { background:rgba(78,205,196,.1); color:var(--teal); }
+#agegate { display:none; position:fixed; inset:0; z-index:5000; background:rgba(10,6,2,.97); align-items:center; justify-content:center; padding:20px; }
+.agebox { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:40px 32px; max-width:420px; text-align:center; }
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<nav>
+  <a class="nav-brand" href="/">
+    {{ store.nama_toko|upper }}
+    <span class="nav-brand-sub">{{ store.tagline }}</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="/">💨 Liquid</a>
+    <a class="nav-link device-link" href="/devices">🎮 Device</a>
+    <a class="nav-link" href="/cek-invoice">🧾 Invoice</a>
+    {% if session.get("admin_logged_in") %}
+    <a class="nav-link admin-link" href="/admin">⚙️ Admin</a>
+    <a class="nav-link" href="/orders">📋 Pesanan</a>
+    <a class="nav-link" style="color:var(--danger);font-size:12px;" href="/admin/logout">Logout</a>
+    {% else %}
+    <a class="nav-link admin-link" href="/admin/login">🔐 Admin</a>
+    {% endif %}
+    <a class="cart-btn" href="/cart">
+      🛒 Keranjang
+      {% if cart_count > 0 %}<span class="cart-badge">{{ cart_count }}</span>{% endif %}
+    </a>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-wrap" id="fc">
+  {% for cat,msg in messages %}
+  <div class="flash {{ cat }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+<script>setTimeout(()=>{const e=document.getElementById('fc');if(e){e.style.opacity='0';e.style.transition='opacity .5s';setTimeout(()=>e.remove(),500);}},3500);</script>
+{% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<footer>&copy; {{ year }} <span>{{ store.nama_toko }}</span> — Produk mengandung nikotin, hanya untuk usia 18+</footer>
+<div id="agegate"><div class="agebox">
+  <div style="font-size:56px;margin-bottom:12px;">🔞</div>
+  <h2 style="font-family:'Playfair Display',serif;margin-bottom:10px;">Verifikasi Usia</h2>
+  <p style="color:var(--muted);margin-bottom:24px;">Situs ini menjual produk vape yang mengandung nikotin dan hanya untuk pengunjung berusia <strong style="color:var(--text)">18 tahun ke atas</strong>.</p>
+  <div style="display:flex;gap:10px;justify-content:center;">
+    <button class="btn btn-primary" onclick="ageYes()">Saya 18+ tahun</button>
+    <button class="btn btn-outline" onclick="location.href='https://www.google.com'">Keluar</button>
+  </div>
+</div></div>
+<script>
+try{ if(!localStorage.getItem('age_ok')){ document.getElementById('agegate').style.display='flex'; document.body.style.overflow='hidden'; } }catch(e){}
+function ageYes(){ try{localStorage.setItem('age_ok','1');}catch(e){} document.getElementById('agegate').style.display='none'; document.body.style.overflow=''; }
+</script>
+</body>
+</html>

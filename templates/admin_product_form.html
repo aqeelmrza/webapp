@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{% if mode=="add" %}Tambah Produk{% else %}Edit Produk{% endif %} — VapeStore{% endblock %}
+{% block content %}
+<div class="wrapper" style="max-width:640px;">
+  <div style="margin-bottom:24px;" class="fade-up">
+    <a href="/admin" style="color:var(--muted);text-decoration:none;font-size:13px;">← Kembali ke Admin</a>
+  </div>
+
+  <h1 class="page-title fade-up">
+    {% if mode=="add" %}➕ Tambah Produk{% else %}✏️ Edit Produk{% endif %}
+  </h1>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;" class="fade-up delay-1">
+    <form method="POST">
+      {% if mode=="add" %}
+      <div class="form-group">
+        <label class="form-label">Kode Produk <span style="color:var(--danger)">*</span></label>
+        <input class="form-input" type="text" name="id" placeholder="Contoh: P09, F05..." maxlength="10" required style="text-transform:uppercase;">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Kode harus unik (maks. 10 karakter)</div>
+      </div>
+      {% endif %}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Nama Produk <span style="color:var(--danger)">*</span></label>
+          <input class="form-input" type="text" name="nama" value="{{ product.nama if product else '' }}" placeholder="Masukkan nama produk..." required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kategori</label>
+          <select class="form-select" name="kategori">
+            {% for k in ["Fruity","Creamy","Dessert"] %}
+            <option value="{{ k }}" {% if product and product.kategori==k %}selected{% endif %}>{{ k }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Rasa</label>
+          <input class="form-input" type="text" name="rasa" value="{{ product.rasa if product else '' }}" placeholder="Contoh: Mango, Vanilla...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nikotin (mg)</label>
+          <input class="form-input" type="number" name="nikotin" value="{{ product.nikotin if product else 3 }}" min="0" max="50">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ukuran (ml)</label>
+          <input class="form-input" type="number" name="ukuran" value="{{ product.ukuran if product else 30 }}" min="1" max="500">
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Harga (Rp) <span style="color:var(--danger)">*</span></label>
+          <input class="form-input" type="number" name="harga" value="{{ product.harga if product else '' }}" placeholder="Contoh: 110000" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Stok</label>
+          <input class="form-input" type="number" name="stok" min="0" value="{{ product.stok if product else 0 }}">
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <label style="display:flex;gap:8px;align-items:center;cursor:pointer;padding-bottom:12px;">
+            <input type="checkbox" name="aktif" value="1" {% if not product or product.aktif %}checked{% endif %}> Tampilkan di toko
+          </label>
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Deskripsi</label>
+          <textarea class="form-textarea" name="deskripsi" placeholder="Deskripsi produk...">{{ product.deskripsi if product else '' }}</textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button class="btn btn-primary" type="submit">
+          {% if mode=="add" %}➕ Tambah Produk{% else %}💾 Simpan Perubahan{% endif %}
+        </button>
+        <a class="btn btn-outline" href="/admin">Batal</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

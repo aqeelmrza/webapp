@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Voucher — {{ store.nama_toko }}{% endblock %}
+{% block content %}
+<div class="wrapper">
+  <a href="/admin" style="color:var(--muted);text-decoration:none;font-size:13px;">← Kembali ke Admin</a>
+  <h1 class="page-title" style="margin-top:14px;">🎟️ Voucher & Promo</h1>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:28px;">
+    <form method="POST" action="/admin/vouchers" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;align-items:end;">
+      <div class="form-group" style="margin:0"><label class="form-label">Kode</label><input class="form-input" name="kode" required maxlength="20" style="text-transform:uppercase"></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Tipe</label><select class="form-select" name="tipe"><option value="persen">Persen (%)</option><option value="nominal">Nominal (Rp)</option></select></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Nilai</label><input class="form-input" type="number" name="nilai" min="1" required></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Min. Belanja</label><input class="form-input" type="number" name="min_belanja" min="0" value="0"></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Maks. Diskon (persen)</label><input class="form-input" type="number" name="maks_diskon" min="0" value="0"></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Kuota (0 = bebas)</label><input class="form-input" type="number" name="kuota" min="0" value="0"></div>
+      <div class="form-group" style="margin:0"><label class="form-label">Berlaku s/d</label><input class="form-input" type="date" name="berlaku_sampai"></div>
+      <button class="btn btn-primary" type="submit">+ Tambah</button>
+    </form>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:auto;">
+    <table class="data-table">
+      <thead><tr><th>Kode</th><th>Diskon</th><th>Min. Belanja</th><th>Pemakaian</th><th>Berlaku</th><th>Status</th><th>Aksi</th></tr></thead>
+      <tbody>
+      {% for v in vouchers %}
+      {% set expired = v.berlaku_sampai and v.berlaku_sampai < today %}
+      <tr>
+        <td><strong style="color:var(--accent)">{{ v.kode }}</strong></td>
+        <td>{% if v.tipe=='persen' %}{{ v.nilai }}%{% if v.maks_diskon %} <span style="color:var(--muted);font-size:12px">(maks {{ v.maks_diskon|rp }})</span>{% endif %}{% else %}{{ v.nilai|rp }}{% endif %}</td>
+        <td>{{ v.min_belanja|rp }}</td>
+        <td>{{ v.terpakai }}{% if v.kuota %} / {{ v.kuota }}{% else %} / ∞{% endif %}</td>
+        <td style="font-size:13px;">{{ v.berlaku_sampai or 'Tanpa batas' }}</td>
+        <td>{% if expired %}<span class="pill pill-out">Kedaluwarsa</span>{% elif v.aktif %}<span class="pill pill-ok">Aktif</span>{% else %}<span class="pill pill-low">Nonaktif</span>{% endif %}</td>
+        <td><div style="display:flex;gap:6px;">
+          <form method="POST" action="/admin/vouchers/{{ v.kode }}/toggle"><button class="btn btn-outline btn-sm">{{ 'Nonaktifkan' if v.aktif else 'Aktifkan' }}</button></form>
+          <form method="POST" action="/admin/vouchers/{{ v.kode }}/delete" onsubmit="return confirm('Hapus voucher?')"><button class="btn btn-danger btn-sm">🗑️</button></form>
+        </div></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

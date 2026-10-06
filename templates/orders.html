@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Manajemen Pesanan — {{ store.nama_toko }}{% endblock %}
+{% block extra_head %}
+<style>
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase;}
+.stat-val{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:auto;}
+.filter-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-tab-status{padding:7px 18px;border-radius:100px;font-size:12px;border:1px solid var(--border);color:var(--muted);background:var(--card);text-decoration:none;transition:all .2s;}
+.filter-tab-status:hover,.filter-tab-status.active{background:var(--accent);color:#1a1008;border-color:var(--accent);font-weight:600;}
+.sf{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.sf .form-input{width:auto;flex:1;min-width:160px;padding:9px 14px;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrapper">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px;" class="fade-up">
+    <h1 class="page-title" style="margin-bottom:0;">📋 Manajemen Pesanan</h1>
+    <div style="display:flex;gap:8px;">
+      <a class="btn btn-outline btn-sm" href="/orders/export-csv">📥 Export CSV</a>
+      <a class="btn btn-outline btn-sm" href="/admin">← Admin</a>
+    </div>
+  </div>
+
+  <div class="stat-grid fade-up d1">
+    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-val">{{ all_count }}</div></div>
+    <div class="stat-card"><div class="stat-label">Diproses</div><div class="stat-val" style="color:var(--warning)">{{ counts.get('Diproses',0) }}</div></div>
+    <div class="stat-card"><div class="stat-label">Dikirim</div><div class="stat-val" style="color:#a78bfa">{{ counts.get('Dikirim',0) }}</div></div>
+    <div class="stat-card"><div class="stat-label">Selesai</div><div class="stat-val" style="color:var(--teal)">{{ counts.get('Selesai',0) }}</div></div>
+    <div class="stat-card"><div class="stat-label">Dibatalkan</div><div class="stat-val" style="color:#f4a4a4">{{ counts.get('Dibatalkan',0) }}</div></div>
+  </div>
+
+  <form method="GET" action="/orders" class="sf fade-up d1">
+    <input type="hidden" name="status" value="{{ status_filter }}">
+    <input class="form-input" name="q" value="{{ q }}" placeholder="🔍 Kode / nama / HP / email">
+    <input class="form-input" type="date" name="dari" value="{{ dari }}" title="Dari tanggal" style="flex:none;">
+    <input class="form-input" type="date" name="sampai" value="{{ sampai }}" title="Sampai tanggal" style="flex:none;">
+    <button class="btn btn-primary btn-sm" type="submit">Filter</button>
+    {% if q or dari or sampai %}<a class="btn btn-outline btn-sm" href="/orders?status={{ status_filter }}">Reset</a>{% endif %}
+  </form>
+
+  <div class="filter-tabs fade-up d1">
+    {% for s in ["Semua","Diproses","Dikirim","Selesai","Dibatalkan"] %}
+    <a class="filter-tab-status {% if status_filter == s %}active{% endif %}" href="/orders?status={{ s }}&q={{ q|urlencode }}&dari={{ dari }}&sampai={{ sampai }}">{{ s }}</a>
+    {% endfor %}
+  </div>
+
+  {% if orders %}
+  <div class="table-wrap fade-up d2">
+    <table class="data-table">
+      <thead><tr><th>Kode</th><th>Nama</th><th>HP / Email</th><th>Items</th><th>Total</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td><span style="font-family:'Playfair Display',serif;font-size:12px;color:var(--accent)">{{ o.order_code }}</span></td>
+          <td><strong>{{ o.nama }}</strong><br><span style="font-size:11px;color:var(--muted);">{{ o.alamat[:30] }}{% if o.alamat|length > 30 %}...{% endif %}</span></td>
+          <td style="color:var(--muted);font-size:12px;">
+            {% if o.no_hp %}📱 {{ o.no_hp }}<br>{% endif %}{% if o.email %}✉️ {{ o.email }}{% endif %}{% if not o.no_hp and not o.email %}—{% endif %}
+          </td>
+          <td style="color:var(--muted);font-size:13px;">{{ o.item_count }} item</td>
+          <td><span class="price" style="font-size:14px;">{{ o.total_fmt }}</span><br>
+            <span class="pill {{ 'pill-ok' if o.status_bayar=='Lunas' else 'pill-low' }}">{{ o.status_bayar }}</span></td>
+          <td><span class="status-badge status-{{ o.status }}">{{ o.status }}</span>{% if o.resi %}<br><span style="font-size:11px;color:var(--muted)">{{ o.resi }}</span>{% endif %}</td>
+          <td style="color:var(--muted);font-size:12px;white-space:nowrap;">{{ o.created_at[:10] }}</td>
+          <td>
+            <div style="display:flex;gap:5px;">
+              <a class="btn btn-outline btn-sm" href="/orders/{{ o.id }}/invoice" title="Invoice">🧾</a>
+              <a class="btn btn-outline btn-sm" href="/orders/{{ o.id }}/edit" title="Edit">✏️</a>
+              {% if o.wa_customer %}
+              {% set wa_msg = "Halo " ~ o.nama ~ "! Pesanan kamu *" ~ o.order_code ~ "* berstatus " ~ o.status ~ ". Total: " ~ o.total_fmt ~ ((" · Resi " ~ o.resi) if o.resi else "") ~ ". Terima kasih! 🙏" %}
+              <a class="btn btn-sm" style="background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.25);" href="https://wa.me/{{ o.wa_customer }}?text={{ wa_msg | urlencode }}" target="_blank" title="WhatsApp">💬</a>
+              {% endif %}
+              <form method="POST" action="/orders/{{ o.id }}/delete" style="display:inline;" onsubmit="return confirm('Hapus pesanan ini?')">
+                <button class="btn btn-danger btn-sm" type="submit" title="Hapus">🗑️</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if pages > 1 %}
+  <div class="pager">
+    {% for n in range(1, pages+1) %}{% if n == page %}<span class="cur">{{ n }}</span>{% else %}<a href="/orders?status={{ status_filter }}&q={{ q|urlencode }}&dari={{ dari }}&sampai={{ sampai }}&page={{ n }}">{{ n }}</a>{% endif %}{% endfor %}
+  </div>
+  {% endif %}
+  {% else %}
+  <div style="text-align:center;padding:80px 20px;color:var(--muted);" class="fade-up"><div style="font-size:56px;margin-bottom:16px;">📋</div><p>Tidak ada pesanan yang cocok.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}{{ device.nama }} — Aqel Premium Vape{% endblock %}
+{% block extra_head %}
+<style>
+.detail-layout { display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start; }
+@media(max-width:768px){.detail-layout{grid-template-columns:1fr;}}
+.dev-preview { background:linear-gradient(135deg,#12121a,#1a1020); border:1px solid var(--border); border-radius:var(--radius); padding:60px 40px; display:flex; align-items:center; justify-content:center; font-size:100px; position:relative; }
+.tipe-badge { position:absolute; top:16px; right:16px; }
+.detail-info { display:flex; flex-direction:column; gap:20px; }
+.dev-merk { font-size:12px; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; }
+.dev-title { font-family:'Playfair Display',serif; font-size:30px; font-weight:800; letter-spacing:-.5px; line-height:1.2; }
+.dev-price { font-family:'Playfair Display',serif; font-size:26px; font-weight:800; color:var(--accent); }
+.dev-desc { color:var(--muted); line-height:1.7; font-size:14px; }
+
+/* Color Picker */
+.color-section { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+.color-title { font-size:12px; color:var(--muted); letter-spacing:.4px; text-transform:uppercase; margin-bottom:14px; }
+.color-grid { display:flex; gap:10px; flex-wrap:wrap; }
+.color-opt { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+.color-opt input[type=radio] { display:none; }
+.color-swatch { width:36px; height:36px; border-radius:50%; border:3px solid transparent; transition:all .2s; cursor:pointer; }
+.color-opt input:checked + .color-swatch { border-color:var(--accent); box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent); transform:scale(1.15); }
+.color-name { font-size:10px; color:var(--muted); text-align:center; max-width:60px; line-height:1.2; }
+.selected-color { font-size:14px; color:var(--text); margin-top:12px; }
+.selected-color span { color:var(--accent); font-weight:600; }
+
+.add-btn { width:100%; justify-content:center; padding:14px; font-size:16px; font-weight:700; border-radius:var(--radius); }
+
+/* Related */
+.related-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; margin-top:16px; }
+.rel-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; text-decoration:none; display:flex; flex-direction:column; gap:8px; transition:all .2s; }
+.rel-card:hover { border-color:rgba(124,92,252,.4); transform:translateY(-2px); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrapper">
+  <div style="margin-bottom:24px;"><a href="/devices" style="color:var(--muted);text-decoration:none;font-size:13px;">← Kembali ke Device</a></div>
+
+  <div class="detail-layout">
+    <!-- Preview -->
+    <div class="fade-up">
+      <div class="dev-preview" id="previewBox">
+        <span id="previewIcon">{% if device.tipe=='Pod' %}🎯{% else %}⚡{% endif %}</span>
+        <div class="tipe-badge">
+          <span class="badge badge-{{ device.tipe|lower }}">{{ device.tipe }}</span>
+        </div>
+      </div>
+      <div style="margin-top:12px;text-align:center;font-size:13px;color:var(--muted);">
+        Warna dipilih: <span id="previewWarna" style="color:var(--accent);font-weight:600;">–</span>
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="detail-info fade-up d1">
+      <div>
+        <div class="dev-merk">{{ device.merk }}</div>
+        <div class="dev-title">{{ device.nama }}</div>
+      </div>
+      <div class="dev-price">{{ device.harga_fmt }}</div>
+      {% if device.harga_min != device.harga_max %}<div style="font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:10px;">Di keranjang dihitung mulai {{ device.harga_min|rp }}</div>{% endif %}
+      <div style="margin-bottom:14px;">{% if device.stok <= 0 %}<span class="pill pill-out">Stok habis</span>{% elif device.stok <= store.stok_menipis|int %}<span class="pill pill-low">Tersisa {{ device.stok }}</span>{% else %}<span class="pill pill-ok">Tersedia ({{ device.stok }})</span>{% endif %}</div>
+      <div class="dev-desc">{{ device.deskripsi }}</div>
+
+      <!-- Color Picker -->
+      <form method="POST" action="/add_device_to_cart" id="deviceForm">
+        <input type="hidden" name="dev_id" value="{{ device.id }}">
+        <div class="color-section">
+          <div class="color-title">Pilih Warna</div>
+          <div class="color-grid">
+            {% set color_map = {
+              'Black':'#1a1a1a','White':'#f0f0f0','Navy Blue':'#1a3060','Red':'#c0392b',
+              'Gold':'#d4af37','Aurora Gradient':'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+              'Silver':'#b0b0b0','Blue':'#2563eb','Purple':'#7c3aed','Green':'#16a34a',
+              'Orange':'#ea580c','Gunmetal':'#4a4a52','Rose Gold':'#b76e79',
+              'Rainbow':'linear-gradient(135deg,#f00,#f90,#ff0,#0f0,#00f,#90f)',
+              'Black Leather':'#1a0a00','Blue Leather':'#0a1f40','Brown Leather':'#3d1a00',
+              'Carbon Fiber':'#2a2a2a','Gradient':'linear-gradient(135deg,#4facfe,#00f2fe)',
+              'Grey':'#6b7280'
+            } %}
+            {% for w in device.warna %}
+            {% set bg = color_map.get(w,'#444') %}
+            <label class="color-opt">
+              <input type="radio" name="warna" value="{{ w }}" {% if loop.first %}checked{% endif %}
+                     onchange="updateColor('{{ w }}','{{ bg }}')">
+              <div class="color-swatch" style="background:{{ bg }}" title="{{ w }}"></div>
+              <span class="color-name">{{ w }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          {% if device.stok > 0 %}<button class="btn btn-primary add-btn" type="submit">🛒 Tambah ke Keranjang</button>{% else %}<span class="btn btn-outline" style="opacity:.6;">Stok Habis</span>{% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Related -->
+  {% if related %}
+  <div style="margin-top:60px;" class="fade-up d2">
+    <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:20px;margin-bottom:16px;">Device {{ device.tipe }} Lainnya</div>
+    <div class="related-grid">
+      {% for r in related %}
+      <a class="rel-card" href="/device/{{ r.id }}">
+        <div style="font-size:36px;text-align:center">{% if r.tipe=='Pod' %}🎯{% else %}⚡{% endif %}</div>
+        <div style="font-size:11px;color:var(--muted)">{{ r.merk }}</div>
+        <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:14px;">{{ r.nama }}</div>
+        <div style="color:var(--accent);font-weight:700;font-size:13px;">{{ r.harga_fmt }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+// Set initial preview from first color
+const firstWarna = document.querySelector('input[name="warna"]:checked');
+if(firstWarna) {
+  document.getElementById('previewWarna').textContent = firstWarna.value;
+}
+
+function updateColor(name, bg) {
+  document.getElementById('previewWarna').textContent = name;
+  const box = document.getElementById('previewBox');
+  box.style.background = bg.startsWith('linear') ? bg : `radial-gradient(circle at 40% 40%, ${bg}44, #12121a)`;
+}
+// Init
+if(firstWarna) {
+  const allInputs = document.querySelectorAll('input[name="warna"]');
+  allInputs.forEach(inp => {
+    if(inp.checked) {
+      const swatch = inp.nextElementSibling;
+      const bg = swatch.style.background;
+      updateColor(inp.value, bg);
+    }
+  });
+}
+</script>
+{% endblock %}

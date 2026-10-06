@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Ulasan — {{ store.nama_toko }}{% endblock %}
+{% block content %}
+<div class="wrapper">
+  <a href="/admin" style="color:var(--muted);text-decoration:none;font-size:13px;">← Kembali ke Admin</a>
+  <h1 class="page-title" style="margin-top:14px;">⭐ Moderasi Ulasan</h1>
+  {% if reviews %}
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:auto;">
+    <table class="data-table">
+      <thead><tr><th>Produk</th><th>Pelanggan</th><th>Rating</th><th>Komentar</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+      <tbody>
+      {% for r in reviews %}
+      <tr {% if not r.approved %}style="opacity:.5"{% endif %}>
+        <td>{{ r.produk }}</td><td>{{ r.nama }}</td>
+        <td><span class="stars">{{ '★' * r.rating }}</span><span class="stars-off">{{ '★' * (5 - r.rating) }}</span></td>
+        <td style="max-width:320px;font-size:13px;color:var(--muted)">{{ r.komentar }}</td>
+        <td style="font-size:12px;color:var(--muted)">{{ r.created_at[:10] }}</td>
+        <td><div style="display:flex;gap:6px;">
+          <form method="POST" action="/admin/reviews/{{ r.id }}/toggle"><button class="btn btn-outline btn-sm">{{ 'Sembunyikan' if r.approved else 'Tampilkan' }}</button></form>
+          <form method="POST" action="/admin/reviews/{{ r.id }}/delete" onsubmit="return confirm('Hapus ulasan?')"><button class="btn btn-danger btn-sm">🗑️</button></form>
+        </div></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p style="color:var(--muted)">Belum ada ulasan.</p>{% endif %}
+</div>
+{% endblock %}

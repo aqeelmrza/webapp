@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Admin Login — Aqel Premium Vape{% endblock %}
+{% block extra_head %}
+<style>
+.login-wrap {
+  min-height: calc(100vh - 66px - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.glow-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(ellipse, rgba(232,168,87,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+.login-box { width: 100%; max-width: 430px; position: relative; z-index: 1; }
+.login-head { text-align: center; margin-bottom: 36px; }
+.dino-icon { font-size: 52px; display: block; margin-bottom: 14px; }
+.login-title { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+.login-title em { color: var(--accent); font-style: normal; }
+.login-desc { color: var(--muted); font-size: 14px; font-weight: 300; }
+.login-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px;
+  position: relative;
+  overflow: hidden;
+}
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #1a1008;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transition: all .25s;
+  margin-top: 8px;
+  letter-spacing: .3px;
+}
+.btn-login:hover { background: #f0b96a; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(232,168,87,0.2); }
+.btn-login:active { transform: translateY(0); }
+.back-link { display: block; text-align: center; margin-top: 26px; font-size: 13px; color: var(--muted); text-decoration: none; transition: color .25s; }
+.back-link:hover { color: var(--accent); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="login-wrap">
+  <div class="glow-bg"></div>
+  <div class="login-box">
+
+    <div class="login-head fade-up">
+      <span class="dino-icon">🦖</span>
+      <h1 class="login-title">Admin <em>Portal</em></h1>
+      <p class="login-desc">Halaman ini hanya untuk Administrator</p>
+    </div>
+
+    <div class="login-card fade-up d1">
+      <form method="POST" action="/admin/login">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input class="form-input" type="text" name="username" placeholder="Masukkan username..." autofocus required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" name="password" placeholder="Masukkan password..." required>
+        </div>
+        <button class="btn-login" type="submit">🔓 &nbsp;Login ke Dashboard</button>
+      </form>
+    </div>
+
+    <a class="back-link fade-up d2" href="/">← Kembali ke Toko</a>
+
+  </div>
+</div>
+{% endblock %}

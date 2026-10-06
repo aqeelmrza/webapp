@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Cek Invoice — Aqel Premium Vape{% endblock %}
+{% block content %}
+<div class="wrapper" style="max-width:520px;">
+  <div style="text-align:center;padding-top:40px;" class="fade-up">
+    <div style="font-size:64px;margin-bottom:20px;">🧾</div>
+    <h1 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;margin-bottom:8px;">Cek Invoice Pesanan</h1>
+    <p style="color:var(--muted);margin-bottom:36px;line-height:1.7;">Masukkan kode pesanan untuk melihat invoice, download PDF, atau kirim via WhatsApp.</p>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;" class="fade-up d1">
+    <form method="POST" action="/cek-invoice">
+      <div class="form-group">
+        <label class="form-label">Kode Pesanan</label>
+        <input class="form-input" type="text" name="order_code" placeholder="ORD-20260101-A1B2C3" required
+               style="font-family:'Playfair Display',serif;letter-spacing:1px;text-transform:uppercase;font-size:15px;">
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">Kode pesanan ditampilkan di halaman sukses setelah checkout.</div>
+      </div>
+      <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center;">🔍 Lihat Invoice</button>
+    </form>
+  </div>
+
+  <div style="background:var(--card);border:1px solid rgba(78,205,196,.15);border-radius:var(--radius);padding:20px 24px;margin-top:20px;" class="fade-up d2">
+    <div style="font-size:12px;color:var(--teal);margin-bottom:10px;font-weight:600;">💡 Setelah lihat invoice kamu bisa:</div>
+    <div style="font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:6px;">
+      <span>🖨️ Download PDF untuk disimpan</span>
+      <span>💬 Share via WhatsApp</span>
+      <span>🔗 Salin link invoice</span>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:24px;font-size:13px;color:var(--muted);" class="fade-up d2">
+    <a href="/" style="color:var(--accent);">← Kembali Belanja</a>
+  </div>
+</div>
+{% endblock %}

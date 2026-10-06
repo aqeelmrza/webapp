@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invoice {{ order.order_code }}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#fff;color:#111;font-size:14px;padding:32px;}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;border-bottom:2px solid #111;padding-bottom:20px;}
+.brand{font-size:22px;font-weight:900;letter-spacing:1px;}
+.brand span{color:#888;}
+.inv-label{font-size:40px;font-weight:900;color:#ddd;letter-spacing:6px;}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px;}
+.meta-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#666;margin-bottom:4px;}
+.meta-val{font-size:13px;line-height:1.7;}
+table{width:100%;border-collapse:collapse;margin-bottom:24px;}
+th{padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#666;border-bottom:1px solid #111;}
+td{padding:12px 10px;font-size:13px;border-bottom:1px solid #eee;}
+.total-section{display:flex;justify-content:flex-end;margin-bottom:32px;}
+.total-box{min-width:260px;}
+.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;color:#666;}
+.total-grand{display:flex;justify-content:space-between;font-weight:900;font-size:17px;padding-top:12px;margin-top:8px;border-top:2px solid #111;}
+.footer{text-align:center;font-size:11px;color:#888;padding-top:20px;border-top:1px solid #eee;}
+@media print{body{padding:0;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="brand">AQEL <span>PREMIUM VAPE</span></div>
+    <div style="font-size:11px;color:#888;margin-top:4px;">Aqel Premium Vape Collection</div>
+  </div>
+  <div class="inv-label">INVOICE</div>
+</div>
+
+<div class="meta">
+  <div>
+    <div class="meta-label">Kepada</div>
+    <div class="meta-val">
+      <strong>{{ order.nama }}</strong><br>
+      {{ order.alamat }}<br>
+      {% if order.no_hp %}📱 {{ order.no_hp }}<br>{% endif %}
+      {% if order.email %}✉️ {{ order.email }}{% endif %}
+    </div>
+  </div>
+  <div style="text-align:right;">
+    <div class="meta-label">Detail Invoice</div>
+    <div class="meta-val">
+      No: <strong>{{ order.order_code }}</strong><br>
+      Tanggal: {{ order.created_at }}<br>
+      Status: <strong>{{ order.status }}</strong>
+    </div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th><th>Produk</th><th>Detail</th><th>Qty</th><th style="text-align:right">Harga</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in order['items'] %}
+    <tr>
+      <td style="color:#aaa">{{ loop.index }}</td>
+      <td><strong>{{ item.nama }}</strong></td>
+      <td style="color:#666;font-size:12px;">
+        {% if item.get('type') == 'device' %}{{ item.warna }} · {{ item.merk }}
+        {% else %}{{ item.rasa }} · {{ item.nikotin }}mg · {{ item.ukuran }}ml{% endif %}
+      </td>
+      <td>{{ item.get('qty', 1) }}</td>
+      <td style="text-align:right;font-weight:700;">
+        Rp {{ "{:,}".format((item.harga * item.get('qty',1))|int).replace(",",".") }}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="total-section">
+  <div class="total-box">
+    <div class="total-row"><span>Subtotal</span><span>{{ order.subtotal_fmt }}</span></div>
+    {% if order.diskon %}<div class="total-row"><span>Diskon {{ order.voucher_kode or '' }}</span><span>− {{ order.diskon_fmt }}</span></div>{% endif %}
+    <div class="total-row"><span>Ongkos Kirim</span><span>{{ order.ongkir_fmt if order.ongkir else 'Gratis' }}</span></div>
+    <div class="total-row"><span>Pembayaran</span><span>{{ order.metode_bayar }} · {{ order.status_bayar }}</span></div>
+    {% if order.resi %}<div class="total-row"><span>{{ order.kurir }}</span><span>Resi {{ order.resi }}</span></div>{% endif %}
+    <div class="total-grand"><span>TOTAL</span><span>{{ order.total_fmt }}</span></div>
+  </div>
+</div>
+
+<div class="footer">
+  Terima kasih telah berbelanja di <strong>Aqel Premium Vape Collection</strong><br>
+  {{ order.order_code }} · {{ order.created_at }}
+</div>
+
+<script>window.onload=()=>{window.print();}</script>
+</body>
+</html>

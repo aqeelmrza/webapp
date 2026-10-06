@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Keranjang — Aqel Premium Vape{% endblock %}
+{% block extra_head %}
+<style>
+.cart-layout{display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start;}
+@media(max-width:768px){.cart-layout{grid-template-columns:1fr;}}
+.cart-items{display:flex;flex-direction:column;gap:12px;}
+.cart-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;align-items:center;gap:16px;}
+.item-icon{font-size:36px;width:60px;height:60px;display:flex;align-items:center;justify-content:center;background:var(--surface);border-radius:10px;flex-shrink:0;}
+.item-info{flex:1;min-width:0;}
+.item-name{font-family:'Playfair Display',serif;font-weight:700;font-size:15px;margin-bottom:4px;}
+.item-meta{font-size:13px;color:var(--muted);}
+.item-price{font-family:'Playfair Display',serif;font-weight:700;color:var(--accent);font-size:16px;white-space:nowrap;}
+.summary-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;position:sticky;top:80px;}
+.summary-row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:12px;}
+.summary-row.total{border-top:1px solid var(--border);padding-top:16px;margin-top:8px;font-size:18px;font-family:'Playfair Display',serif;font-weight:700;}
+.summary-row.total span:last-child{color:var(--accent);}
+.qty-control{display:flex;align-items:center;gap:6px;}
+.qty-btn{width:28px;height:28px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.qty-btn:hover{border-color:var(--accent);color:var(--accent);}
+.qty-num{min-width:28px;text-align:center;font-weight:600;font-size:14px;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="wrapper">
+  <h1 class="page-title fade-up">🛒 Keranjang {% if cart_count > 0 %}<span style="font-size:16px;color:var(--muted);font-weight:400;">({{ cart_count }} item)</span>{% endif %}</h1>
+
+  {% if items %}
+  <div class="cart-layout">
+    <div class="cart-items fade-up d1">
+      {% for item in items %}
+      <div class="cart-item">
+        <div class="item-icon">
+          {% if item.type == 'device' %}{% if item.tipe == 'Pod' %}🎯{% else %}⚡{% endif %}
+          {% elif item.kategori == 'Fruity' %}🍓{% elif item.kategori == 'Creamy' %}🍰{% else %}🍮{% endif %}
+        </div>
+        <div class="item-info">
+          <div class="item-name">{{ item.nama }}</div>
+          {% if item.type == 'device' %}
+          <div class="item-meta">{{ item.merk }} · {{ item.tipe }}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">🎨 {{ item.warna }}</div>
+          {% else %}
+          <div class="item-meta">{{ item.rasa }} · {{ item.nikotin }}mg · {{ item.ukuran }}ml</div>
+          {% endif %}
+          {% if item.over_stock %}<div style="font-size:12px;color:var(--danger);margin-top:4px;">⚠️ Stok tersisa {{ item.stok }} — kurangi jumlah</div>{% endif %}
+          <div style="margin-top:8px;">
+            <form method="POST" action="/update_qty/{{ item.cart_index }}" style="display:inline;">
+              <div class="qty-control">
+                <button type="submit" name="qty" value="{{ [item.qty - 1, 0]|max }}" class="qty-btn">−</button>
+                <span class="qty-num">{{ item.qty }}</span>
+                <button type="submit" name="qty" value="{{ item.qty + 1 }}" class="qty-btn" {% if item.qty >= item.stok %}disabled style="opacity:.4;cursor:not-allowed"{% endif %}>+</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+          <div class="item-price">{{ item.subtotal_fmt }}</div>
+          {% if item.qty > 1 %}
+          <div style="font-size:11px;color:var(--muted);">{{ item.harga_fmt }} / item</div>
+          {% endif %}
+          <a class="btn btn-danger btn-sm" href="/remove_from_cart/{{ item.cart_index }}">✕ Hapus</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="summary-box fade-up d2">
+      <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:16px;margin-bottom:20px;">Ringkasan Pesanan</div>
+      {% for item in items %}
+      <div class="summary-row">
+        <span style="color:var(--muted);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ item.nama }}{% if item.qty > 1 %} ×{{ item.qty }}{% endif %}</span>
+        <span>{{ item.subtotal_fmt }}</span>
+      </div>
+      {% endfor %}
+      <div class="summary-row" style="color:var(--muted);"><span>Subtotal</span><span>{{ sm.subtotal_fmt }}</span></div>
+      {% if sm.diskon %}<div class="summary-row" style="color:var(--teal);"><span>Diskon ({{ sm.voucher }})</span><span>− {{ sm.diskon_fmt }}</span></div>{% endif %}
+      <div class="summary-row" style="color:var(--muted);"><span>Ongkir</span>{% if sm.ongkir == 0 %}<span style="color:var(--teal);">Gratis ✓</span>{% else %}<span>{{ sm.ongkir_fmt }}</span>{% endif %}</div>
+      {% if sm.kurang_gratis %}<div style="font-size:11px;color:var(--muted);margin:-6px 0 10px;">Belanja {{ sm.kurang_gratis|rp }} lagi untuk gratis ongkir 🚚</div>{% endif %}
+      <div class="summary-row total"><span>Total</span><span>{{ total_fmt }}</span></div>
+
+      {% if sm.voucher %}
+      <form method="POST" action="/cart/voucher/remove" style="margin-top:14px;">
+        <button class="btn btn-outline btn-sm" type="submit" style="width:100%;justify-content:center;">✕ Lepas voucher {{ sm.voucher }}</button>
+      </form>
+      {% else %}
+      <form method="POST" action="/cart/voucher" style="margin-top:14px;display:flex;gap:6px;">
+        <input class="form-input" name="kode" placeholder="🎟️ Kode voucher" style="text-transform:uppercase;padding:9px 12px;">
+        <button class="btn btn-secondary btn-sm" type="submit">Pakai</button>
+      </form>
+      {% endif %}
+
+      <form method="POST" action="/checkout" style="margin-top:20px;">
+        <div class="form-group">
+          <label class="form-label">Nama Penerima <span style="color:var(--danger)">*</span></label>
+          <input class="form-input" type="text" name="nama" placeholder="Nama lengkap..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Alamat Pengiriman <span style="color:var(--danger)">*</span></label>
+          <textarea class="form-textarea" name="alamat" placeholder="Alamat lengkap + RT/RW + Kelurahan..." required style="min-height:70px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. WhatsApp <span style="color:var(--danger)">*</span></label>
+          <input class="form-input" type="tel" name="no_hp" placeholder="08xxxxxxxxxx" required>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">💬 Untuk konfirmasi pesanan via WhatsApp</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email (opsional)</label>
+          <input class="form-input" type="email" name="email" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Metode Pembayaran</label>
+          <select class="form-select" name="metode_bayar">{% for m in pay_methods %}<option>{{ m }}</option>{% endfor %}</select>
+          {% if store.info_bayar %}<div style="font-size:11px;color:var(--muted);margin-top:4px;">{{ store.info_bayar }}</div>{% endif %}
+        </div>
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--muted);margin-bottom:14px;cursor:pointer;">
+          <input type="checkbox" name="umur" value="1" required style="margin-top:3px;"> Saya menyatakan berusia minimal 18 tahun dan data di atas benar.
+        </label>
+        <button class="btn btn-primary" type="submit" {% if blocked %}disabled{% endif %} style="width:100%;justify-content:center;margin-top:8px;padding:13px;{% if blocked %}opacity:.5;cursor:not-allowed;{% endif %}">
+          {% if blocked %}Perbaiki stok dulu{% else %}✓ Checkout Sekarang{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:80px 20px;color:var(--muted);" class="fade-up">
+    <div style="font-size:64px;margin-bottom:16px;">🛒</div>
+    <p style="margin-bottom:24px;">Keranjangmu masih kosong.</p>
+    <a class="btn btn-primary" href="/">💨 Lihat Liquid</a>
+    &nbsp;
+    <a class="btn btn-secondary" href="/devices">🎮 Lihat Device</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
